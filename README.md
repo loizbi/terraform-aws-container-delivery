@@ -11,7 +11,7 @@ The webapp and Compose files are sample workload material. Terraform does not pr
 - AWS account, AWS CLI, Terraform CLI, and GitHub CLI.
 - GitHub Actions enabled, with permission to configure repository variables, Environments, and branch protection.
 - `validation` and `main` branches in the repository. The OIDC trust policies use GitHub's immutable owner and repository IDs.
-- Docker is needed only to run the illustrative web app locally.
+- Docker is needed only to run the illustrative webapp locally.
 
 ## Create the Terraform State Bucket
 
@@ -44,14 +44,15 @@ Terraform outputs `AWS_ARN_PUSH_ROLE`, `AWS_ARN_PROMOTE_ROLE` and `AWS_REPO_URI`
 
 ## Configure the GitHub Repository
 
-Navigate to **Settings → Secrets and variables → Actions → Variables** and add the :
+Navigate to **Settings → Secrets and variables → Actions → Variables** and add:
 
 - `AWS_ARN_PUSH_ROLE` with the matching Terraform output.
 - `AWS_ARN_PROMOTE_ROLE` with the matching Terraform output.
+- When troubleshooting, add `ACTIONS_STEP_DEBUG` with the value `true` to enable step debug logging. Remove it or set it to `false` when finished.
 
 ## Configure Production Protections
 
-Create a GitHub Environment named `production`, require reviewer approval, and restrict deployments to `main`. Protect `main` with required pull request reviews and checks; Environment approval happens after merge and protect image promotion.
+Create a GitHub Environment named `production`, require reviewer approval, and restrict deployments to `main`. Protect `main` with required pull request reviews and checks; Environment approval happens after merge and protects image promotion.
 
 ## Configure the CI/CD Pipeline
 
@@ -62,20 +63,38 @@ The workflows use the sample app in `webapp/` as the image build context:
 
 The PR head commit must be the same commit the validation workflow pushed to ECR. A promotion fails if that SHA tag is not present.
 
-## Run the Web App Locally (Optional)
+## Run the WebApp Locally (Optional)
+Copy `webapp/.env.example` to `webapp/.env` and `docker-compose.example.yml` to `docker-compose.yml`.
+Set a local `DB_PASSWORD` for testing. Production deployments will receive it from a secret manager.
 
-The Compose file runs the image from ECR alongside PostgreSQL. Copy `.env.example` to `.env`, set `ECR_URL`, `ECR_TAG` and `DB_PASSWORD=local-test-password`. Use the ECR repository URI for `ECR_URL`, and an image tag that exists in ECR for `ECR_TAG`.
-
-Authenticate Docker to your ECR registry, then start the services from `webapp/`:
+### Build locally
 
 ```sh
-aws ecr get-login-password --region "{{.AWS_REGION}}" \
-        | docker login --username AWS --password-stdin "{{.AWS_ACCOUNT_ID}}.dkr.ecr.{{.AWS_REGION}}.amazonaws.com"
-
 docker compose up -d
 docker compose ps
+```
 
-## Push to validation and Open a Pull Request
+### Pull from ECR
+Set `ECR_URL` to your ECR repository URI and `ECR_TAG` to the image tag in `.env`.
+Authenticate Docker to your ECR registry, see `docker-compose.yml` for how to switch from a local build to an ECR image and then start the services from `webapp/`:
+
+```sh
+aws ecr get-login-password --region <AWS_REGION> \
+  | docker login --username AWS --password-stdin <AWS_ACCOUNT_ID>.dkr.ecr.<AWS_REGION>.amazonaws.com
+
+docker compose pull
+docker compose up -d
+```
+
+With the example `PORT=100`, open `http://localhost:10010`. Stop the services with:
+
+```sh
+docker compose down
+```
+
+The PostgreSQL volume is retained. To remove it and its local data, run `docker compose down -v`.
+
+## Push to validation and Open a Pull Request to main
 
 Push a change under `webapp/` to `validation` and confirm the image build, scan, and ECR push succeed. Open a pull request from the validated commit to `main`. After required PR review and merge, approve the promotion job in the `production` Environment.
 

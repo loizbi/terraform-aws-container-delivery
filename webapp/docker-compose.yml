@@ -1,7 +1,8 @@
 name: ${NAME}
 services:
   webapp:
-    image: ${ECR_URL}:${ECR_TAG}
+    build: .
+    image: ${NAME}:${TAG}
     container_name: ${NAME}_webapp
     restart: unless-stopped
 
