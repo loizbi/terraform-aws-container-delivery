@@ -4,7 +4,7 @@ name: Docker ECR Validation
 on:
   push:
     branches:
-      - validation-off
+      - validation
     paths:
       - 'webapp/**'
 

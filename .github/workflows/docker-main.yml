@@ -4,7 +4,7 @@ name: Docker ECR Main
 on:
   pull_request:
     types: [closed]
-    branches: [main-off]
+    branches: [main]
     paths:
       - 'webapp/**'
 
