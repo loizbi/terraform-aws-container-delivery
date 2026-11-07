@@ -52,7 +52,7 @@ Navigate to **Settings → Secrets and variables → Actions → Variables** and
 
 ## Configure Production Protections
 
-Create a GitHub Environment named `production`, require reviewer approval, and restrict deployments to `main`. Protect `main` with required pull request reviews and checks; Environment approval happens after merge and protect image promotion.
+Create a GitHub Environment named `production`, require reviewer approval, and restrict deployments to `main`. Protect `main` with required pull request reviews and checks; Environment approval happens after merge and protects image promotion.
 
 ## Configure the CI/CD Pipeline
 
