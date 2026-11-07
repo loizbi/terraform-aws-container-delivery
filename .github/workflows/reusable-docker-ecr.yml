@@ -1,0 +1,125 @@
+
+name: Reusable Docker Build
+
+on:
+  workflow_call:
+    inputs:
+      push-image:
+        required: true
+        type: boolean
+      promote-image:
+        required: true
+        type: boolean
+      debug:
+        required: false
+        type: boolean
+
+env:
+  AWS_ARN_PUSH_ROLE: ${{ vars.AWS_ARN_PUSH_ROLE }}
+  AWS_ARN_PROMOTE_ROLE: ${{ vars.AWS_ARN_PROMOTE_ROLE }}
+  AWS_REGION: eu-central-1
+  REPOSITORY: terraform-aws-container-delivery
+  IMAGE_TAG: ${{ github.sha }}
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  reusable-docker-build-scan-push:
+    if: ${{ inputs.push-image }}
+    runs-on: ubuntu-24.04
+
+    defaults:
+      run:
+        working-directory: ./webapp
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.AWS_ARN_PUSH_ROLE }}
+          role-session-name: GitHubActions
+          aws-region: ${{ env.AWS_REGION }}
+          mask-aws-account-id: true
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+    
+      # Only for debugging purposes
+      - name: Verify AWS credentials
+        if: ${{ inputs.debug }}
+        run: |
+          aws sts get-caller-identity
+          echo "repo=$GITHUB_REPOSITORY"
+          echo "ref=$GITHUB_REF" \
+          echo "sha=$GITHUB_SHA"
+
+      - name: Build image
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          if [ -n "$REGISTRY" ]; then
+            IMAGE="$REGISTRY/$REPOSITORY:$IMAGE_TAG"
+          else
+            IMAGE="$REPOSITORY:$IMAGE_TAG"
+          fi
+
+          echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
+          docker build -t "$IMAGE" .
+
+      - name: Trivy Scan Image
+        uses: aquasecurity/trivy-action@v0.36.0
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          TRIVY_DISABLE_VEX_NOTICE: true
+        with:
+          image-ref: ${{ env.IMAGE }}
+          format: table
+          exit-code: 1
+          ignore-unfixed: true
+          severity: CRITICAL,HIGH
+
+      - name: Push image
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          docker push "$IMAGE"
+
+      - name: Get image digest
+        if: ${{ inputs.push-image }}
+        run: |
+          echo "Image: $IMAGE"
+
+  reusable-docker-promote:
+    if: ${{ inputs.promote-image }}
+    runs-on: ubuntu-24.04
+    environment: production
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.AWS_ARN_PROMOTE_ROLE }}
+          role-session-name: GitHubActions
+          aws-region: ${{ env.AWS_REGION }}
+          mask-aws-account-id: true
+
+      - name: Promote approved image
+        env:
+          CANDIDATE_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          aws ecr batch-get-image \
+            --repository-name "$REPOSITORY" \
+            --image-ids imageTag="$CANDIDATE_SHA" \
+            --query 'images[0].imageManifest' \
+            --output text > manifest.json
+
+          aws ecr put-image \
+            --repository-name "$REPOSITORY" \
+            --image-tag latest \
+            --image-manifest file://manifest.json
