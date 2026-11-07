@@ -1,23 +1,22 @@
-name: ${NAME}-dev
+name: ${NAME}
 services:
   webapp:
-    build: .
-    image: ${NAME}-dev:${TAG}
-    container_name: ${NAME}-dev_webapp
+    image: ${ECR_URL}:${ECR_TAG}
+    container_name: ${NAME}_webapp
     restart: unless-stopped
 
     environment:
       - TZ=Europe/Nicosia
       - DB_HOST=postgres
       - DB_PORT=5432
-      - DB_NAME=${NAME}-dev
+      - DB_NAME=${NAME}
       - DB_USER=app
       - DB_PASSWORD=${DB_PASSWORD:?DB_PASSWORD must be provided}
 
     ports:
-      - "127.0.0.1:${PORT}20:8080"
+      - "127.0.0.1:${PORT}10:8080"
 
-    cpus: "0.5"
+    cpus: "1"
     mem_limit: 256m
 
     healthcheck:
@@ -27,21 +26,21 @@ services:
       timeout: 5s
       start_period: 20s
       retries: 3
-
+    
     depends_on:
       postgres:
         condition: service_healthy
 
     networks:
-      - ${NAME}-dev
+      - ${NAME}
 
   postgres:
     image: postgres:17.6
-    container_name: ${NAME}-dev_postgres
+    container_name: ${NAME}_postgres
     restart: unless-stopped
 
     environment:
-      POSTGRES_DB: ${NAME}-dev
+      POSTGRES_DB: ${NAME}
       POSTGRES_USER: app
       # Pass it dynamically via the CLI, the .env file or any cloud Secret Manager
       POSTGRES_PASSWORD: ${DB_PASSWORD}
@@ -50,22 +49,22 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
     networks:
-      - ${NAME}-dev
+      - ${NAME}
 
-    cpus: "0.5"
+    cpus: "1"
     mem_limit: 256m
 
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U app -d ${NAME}-dev"]
+      test: ["CMD-SHELL", "pg_isready -U app -d ${NAME}"]
       interval: 10s
       timeout: 5s
       retries: 5
 
 networks:
-  webapp_php-dev:
-    name: ${NAME}-dev
+  webapp:
+    name: ${NAME}
     driver: bridge
 
 volumes:
   postgres_data:
-    name: ${NAME}-dev
+    name: ${NAME}
