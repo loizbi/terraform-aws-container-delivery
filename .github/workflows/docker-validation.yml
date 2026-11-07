@@ -1,0 +1,22 @@
+
+name: Docker ECR Validation
+
+on:
+  push:
+    branches:
+      - validation-off
+    paths:
+      - 'webapp/**'
+
+# Allow the reusable workflow to use OIDC
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  validation-build-scan-push:
+    uses: ./.github/workflows/reusable-docker-ecr.yml
+    with:
+      push-image: true
+      promote-image: false
+      debug: false

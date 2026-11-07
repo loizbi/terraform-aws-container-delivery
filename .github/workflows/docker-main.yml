@@ -1,0 +1,23 @@
+
+name: Docker ECR Main
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main-off]
+    paths:
+      - 'webapp/**'
+
+# Allow the reusable workflow to use OIDC
+permissions:
+  id-token: write
+  contents: read
+
+jobs:    
+  main-promote:
+    if: github.event.pull_request.merged == true
+    uses: ./.github/workflows/reusable-docker-ecr.yml
+    with:
+      push-image: false
+      promote-image: true
+      debug: false
