@@ -65,7 +65,7 @@ The PR head commit must be the same commit the validation workflow pushed to ECR
 
 ## Run the WebApp Locally (Optional)
 Copy `webapp/.env.example` to `webapp/.env` and `docker-compose.example.yml` to `docker-compose.yml`.
-Set a local `DB_PASSWORD` for testing. Production deployments will receive it from a secret manager.
+Set a local `DB_PASSWORD` for testing. Production deployments should inject the password from a secret manager.
 
 ### Build locally
 

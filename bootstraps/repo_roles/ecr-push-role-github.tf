@@ -18,14 +18,14 @@ data "aws_iam_policy_document" "ecr_push_github_assume_role" {
 
     # The request must come from the specified GitHub repository & branch
     condition {
-      test = "StringLike"
+      test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      
+
       # GitHub OIDC immutable subject format
       values = [
         "repo:${var.ecr_github_org}@${var.ecr_github_owner_id}/${var.ecr_github_repo_name}@${var.ecr_github_repo_id}:ref:refs/heads/${var.ecr_push_github_branch}"
       ]
-      
+
     }
   }
 }

@@ -30,9 +30,21 @@ resource "aws_ecr_lifecycle_policy" "ecr_repo" {
 
   policy = <<EOF
 {
-  "rules": [
+  "rules": [    {
+    "rulePriority": 1,
+    "description": "Always retain the image tagged latest",
+    "selection": {
+      "tagStatus": "tagged",
+      "tagPrefixList": ["latest"],
+      "countType": "imageCountMoreThan",
+      "countNumber": 1
+    },
+    "action": {
+      "type": "expire"
+    }
+  },
     {
-      "rulePriority": 1,
+      "rulePriority": 2,
       "description": "Archive images not pulled in 15 days",
       "selection": {
         "tagStatus": "any",
@@ -46,7 +58,7 @@ resource "aws_ecr_lifecycle_policy" "ecr_repo" {
       }
     },
     {
-      "rulePriority": 2,
+      "rulePriority": 3,
       "description": "Delete images archived for more than 90 days",
       "selection": {
         "tagStatus": "any",
