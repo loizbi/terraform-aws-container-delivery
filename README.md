@@ -15,10 +15,9 @@ The webapp and Compose files are sample workload material. Terraform does not pr
 
 ## Create the Terraform State Bucket
 
-Authenticate to AWS with the CLI. Navigate to `bootstraps/backend`. The S3 backend block in `main.tf` must be commented out when creating the bucket for the first time, allowing Terraform to initialize with a local state file. Run:
+Authenticate to AWS with the CLI. Navigate to `bootstraps/backend`. The S3 backend block in `main.tf` must be commented out when creating the bucket for the first time, allowing Terraform to initialize with a local state file. Replace the sample bucket name in `aws_s3_bucket.terraform_state.bucket` with a globally unique name. Run:
 
 ```sh
-cd bootstraps/backend
 terraform init
 terraform apply
 ```
@@ -58,13 +57,14 @@ Create a GitHub Environment named `production`, require reviewer approval, and r
 
 The workflows use the sample app in `webapp/` as the image build context:
 
-1. A push to `validation` that changes files under `webapp/` builds the image, scans for critical and high vulnerabilities, and pushes it to ECR with the commit SHA as an immutable tag.
+1. A push to `validation` that changes files under `webapp/` builds the image, fails on fixable critical and high findings, and pushes it to ECR with the commit SHA as an immutable tag.
 2. A pull request closed as merged into `main` starts the promotion job. After production Environment approval, it reads the manifest tagged with the PR head SHA and adds the mutable `latest` tag to that same image.
 
-The PR head commit must be the same commit the validation workflow pushed to ECR. A promotion fails if that SHA tag is not present.
+The PR head commit must be the same commit the validation workflow pushed to ECR. A promotion fails if that SHA tag is not present. 
+**Note:** The validation role can update `latest` in the shared ECR repository, so restricting it to approved promotions relies on workflow trust. For stronger isolation, use a separate production ECR repository writable only by the promotion role.
 
 ## Run the WebApp Locally (Optional)
-Copy `webapp/.env.example` to `webapp/.env` and `docker-compose.example.yml` to `docker-compose.yml`.
+Copy `webapp/.env.example` to `webapp/.env` and `docker-compose.example.yml` to `webapp/docker-compose.yml`.
 Set a local `DB_PASSWORD` for testing. Production deployments should inject the password from a secret manager.
 
 ### Build locally
