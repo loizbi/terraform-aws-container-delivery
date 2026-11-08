@@ -5,11 +5,11 @@ terraform {
   ## Verify - terraform state list
   #############################################################
   #backend "s3" {
-  #  bucket         = "example-terraform-bootstraps-dev-eu-central-1"
-  #  key            = "backend/terraform.tfstate"
-  #  region         = "eu-central-1"
-  #  use_lockfile   = true
-  #  encrypt        = true
+  #  bucket       = "example-terraform-bootstraps-dev-eu-central-1"
+  #  key          = "backend/terraform.tfstate"
+  #  region       = "eu-central-1"
+  #  use_lockfile = true
+  #  encrypt      = true
   #}
 
   required_providers {
@@ -23,6 +23,14 @@ terraform {
 
 provider "aws" {
   region = "eu-central-1"
+
+    default_tags {
+    tags = {
+      Environment = "dev"
+      Team        = "devops"
+      ManagedBy   = "terraform"
+    }
+  }
 }
 
 resource "aws_s3_bucket" "terraform_state" {
@@ -32,6 +40,16 @@ resource "aws_s3_bucket" "terraform_state" {
   lifecycle {
     prevent_destroy = true
   }
+}
+
+# Disable public access for the S3 bucket
+resource "aws_s3_bucket_public_access_block" "terraform_public_access" {
+  bucket = aws_s3_bucket.terraform_state.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
 }
 
 # Enable versioning for the S3 bucket
