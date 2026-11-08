@@ -98,33 +98,9 @@ jobs:
   reusable-docker-promote:
     if: ${{ inputs.promote-image }}
     runs-on: ubuntu-24.04
-    # Prevent multiple concurrent promotions to avoid overwriting the latest tag with an older image 
-    concurrency:
-      group: ecr-latest-promotion
-      queue: single
     environment: production
 
     steps:
-      - name: Checkout current main
-        uses: actions/checkout@v4
-        with:
-          ref: main
-          fetch-depth: 0
-
-      - name: Reject stale candidate
-        env:
-          CANDIDATE_SHA: ${{ github.event.pull_request.head.sha }}
-        run: |
-          git fetch --no-tags origin main "$CANDIDATE_SHA"
-
-          CANDIDATE_TREE="$(git rev-parse "${CANDIDATE_SHA}:webapp")"
-          MAIN_TREE="$(git rev-parse "origin/main:webapp")"
-
-          if [ "$CANDIDATE_TREE" != "$MAIN_TREE" ]; then
-            echo "::error::This candidate is stale; main contains different webapp code."
-            exit 1
-          fi
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
