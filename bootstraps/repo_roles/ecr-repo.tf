@@ -11,7 +11,7 @@ resource "aws_ecr_repository" "ecr_repo" {
   }
 
   image_tag_mutability_exclusion_filter {
-    filter      = "dev-*"
+    filter      = "develop*"
     filter_type = "WILDCARD"
   }
 

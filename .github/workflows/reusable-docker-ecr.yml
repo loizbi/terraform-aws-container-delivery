@@ -65,12 +65,16 @@ jobs:
         run: |
           if [ -n "$REGISTRY" ]; then
             IMAGE="$REGISTRY/$REPOSITORY:$IMAGE_TAG"
+            IMAGE_DEVELOP="$REGISTRY/$REPOSITORY:develop"
           else
             IMAGE="$REPOSITORY:$IMAGE_TAG"
+            IMAGE_DEVELOP="$REPOSITORY:develop"
           fi
 
           echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
-          docker build -t "$IMAGE" .
+          echo "IMAGE_DEVELOP=$IMAGE_DEVELOP" >> "$GITHUB_ENV"
+          
+          docker build -t "$IMAGE" -t "$IMAGE_DEVELOP" .
 
       - name: Trivy Scan Image
         uses: aquasecurity/trivy-action@v0.36.0
