@@ -74,8 +74,7 @@ jobs:
           echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
           echo "IMAGE_DEVELOP=$IMAGE_DEVELOP" >> "$GITHUB_ENV"
           
-          docker build -t "$IMAGE" .
-          docker build -t "$IMAGE_DEVELOP" .
+          docker build -t "$IMAGE" -t "$IMAGE_DEVELOP" .
 
       - name: Trivy Scan Image
         uses: aquasecurity/trivy-action@v0.36.0
