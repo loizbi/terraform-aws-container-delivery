@@ -93,11 +93,13 @@ jobs:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
           docker push "$IMAGE"
+          docker push "$IMAGE_DEVELOP"
 
       - name: Get image digest
         if: ${{ inputs.push-image }}
         run: |
           echo "Image: $IMAGE"
+          echo "Image: $IMAGE_DEVELOP"
 
   reusable-docker-promote:
     if: ${{ inputs.promote-image }}
