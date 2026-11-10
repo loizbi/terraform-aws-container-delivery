@@ -95,7 +95,7 @@ jobs:
           docker push "$IMAGE"
           docker push "$IMAGE_DEVELOP"
 
-      - name: Get image digest
+      - name: Show image references
         if: ${{ inputs.push-image }}
         run: |
           echo "Image: $IMAGE"
