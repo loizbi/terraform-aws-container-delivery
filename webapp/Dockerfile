@@ -1,5 +1,5 @@
 
-FROM php:8.4-apache-trixie
+FROM php:8.5-apache-trixie
 
 # Check installed PHP modules
 #docker run --rm php:8.5-apache php -m
