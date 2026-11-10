@@ -11,7 +11,7 @@ services:
     # ECR image: comment out the three local-build lines above then uncomment this line
     # image: ${ECR_URL}:${ECR_TAG}
 
-    container_name: ${NAME}_webapp
+    container_name: ${NAME}-frontend
     restart: unless-stopped
 
     environment:
@@ -41,11 +41,11 @@ services:
         condition: service_healthy
 
     networks:
-      - ${NAME}
+      - webapp
 
   postgres:
     image: postgres:17.6
-    container_name: ${NAME}_postgres
+    container_name: ${NAME}-backend
     restart: unless-stopped
 
     environment:
@@ -58,7 +58,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
     networks:
-      - ${NAME}
+      - webapp
 
     cpus: "1"
     mem_limit: 256m
