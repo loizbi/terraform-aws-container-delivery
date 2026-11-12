@@ -112,7 +112,7 @@ The ECR repository has `prevent_destroy = true`, so Terraform blocks a full dest
 
 ### Destroy the State Bucket
 
-> ⚠️ **Warning:** Back up the Terraform state before proceeding. Destroying the S3 bucket permanently deletes all stored objects and versions, including any state backups.
+⚠️ **Warning:** Back up the Terraform state before proceeding. Destroying the S3 bucket permanently deletes all stored objects and versions, including any state backups.
 
 The bucket also stores the `repo_roles` Terraform state. Migrate or back up that state before destroying the bucket. From `bootstraps/backend`, comment out the S3 backend configuration in `main.tf` and migrate the state locally:
 

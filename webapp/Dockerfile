@@ -39,7 +39,3 @@ RUN mkdir -p \
 
 # Run the entire container as this user
 USER www-data
-
-# Container health check
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD php -r '$s=@fsockopen("127.0.0.1",8080); exit($s ? 0 : 1);'
